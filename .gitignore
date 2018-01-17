@@ -1,0 +1,43 @@
+/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+ajcore*.txt
+*.class
+*.jar
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+/.settings/
+*.classpath
+*.project
+*.launch
+
+# Netbeans
+/nbproject/
+nbactions.xml
+nb-configuration.xml
+
+# IntelliJ
+/.idea/
+*.iws
+*.iml
+
+# Misc
+.DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+~*
+*~
+\#*
+*#
