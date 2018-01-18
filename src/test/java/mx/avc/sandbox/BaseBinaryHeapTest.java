@@ -144,7 +144,6 @@ public class BaseBinaryHeapTest {
         final int max_length = TEST_VALUES.length;
         Integer[] test_values = new Integer[max_length];
         Integer[] head = new Integer[max_length];
-        Integer[] tail = new Integer[max_length];
 
         final int max_base = max_length - 2;
         for(int base = 0; base < max_base; base++) {
@@ -154,13 +153,12 @@ public class BaseBinaryHeapTest {
             for(int limit = 2; limit <= max_limit; limit++) {
                 final int max_index = limit - 1;
                 for(int index = 1; index <= max_index; index++) {
-                    splitHeap(test_values, natural_order, limit, head, tail,
-                            index);
+                    splitHeap(test_values, natural_order, limit, head,  index);
                     assertHeapConsistency(head, natural_order, index);
-                    assertHeapConsistency(tail, natural_order, limit - index);
-                    assertArrayLessThan(head, index, tail, limit - index,
+                    assertHeapConsistency(test_values, natural_order,
+                            limit - index);
+                    assertArrayLessThan(head, index, test_values, limit - index,
                             natural_order);
-
                 }
             }
         }

@@ -67,13 +67,13 @@ public class BaseBinaryHeap {
         }
     }
 
-    public static <T> void splitHeap(T[] heap, Comparator<? super T> comparator,
-            int limit, T[] head, T[] tail, int count) {
+    public static <T> void splitHeap(T[] tail, Comparator<? super T> comparator,
+            int limit, T[] head, int count) {
         Comparator<? super T> reversed = comparator.reversed();
         final int tail_limit = limit - count;
 
-        arraycopy(heap, 0, head, 0, count);
-        arraycopy(heap, count, tail, 0, tail_limit);
+        arraycopy(tail, 0, head, 0, count);
+        arraycopy(tail, count, tail, 0, tail_limit);
 
         heapify(head, reversed, count);
         heapify(tail, comparator, tail_limit);
