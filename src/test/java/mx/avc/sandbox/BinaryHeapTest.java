@@ -52,20 +52,22 @@ public class BinaryHeapTest {
         try {
             Field privateHeap = BinaryHeap.class.getDeclaredField("heap");
             privateHeap.setAccessible(true);
+            Field privateSize = BinaryHeap.class.getDeclaredField("size");
+            privateSize.setAccessible(true);
             Field privateComparator =
                     BinaryHeap.class.getDeclaredField("comparator");
             privateComparator.setAccessible(true);
 
             @SuppressWarnings("unchecked")
-            List<T> h = (List<T>)privateHeap.get(heap);
+            T[] h = (T[])privateHeap.get(heap);
             @SuppressWarnings("unchecked")
             Comparator<T> comparator =
                     (Comparator<T>)privateComparator.get(heap);
 
-            int size = h.size();
+            int size = privateSize.getInt(heap);
             for(int i = 1; i < size; i++) {
-                T entry = h.get(i);
-                T root = h.get((i - 1) / 2);
+                T entry = h[i];
+                T root = h[(i - 1) / 2];
                 assertTrue(comparator.compare(root, entry) <= 0);
             }
 

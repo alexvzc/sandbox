@@ -8,7 +8,7 @@
  */
 package mx.avc.sandbox;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import static java.util.Comparator.naturalOrder;
@@ -25,10 +25,22 @@ import static mx.avc.sandbox.BaseBinaryHeap.splitHeap;
  */
 public class BinaryHeap<T> implements Heap<T> {
 
+    private static final int INITIAL_CAPACITY = 15;
+
+    private static final int MAX_CAPACITY = Integer.MAX_VALUE - 8;
+
+    private static final Object[] DEFAULT_HEAP = new Object[] {};
+
     /**
      * The heap implemented as an array.
      */
-    private final ArrayList<T> heap;
+    private T[] heap;
+
+    /**
+     * The used space within the heap.
+     */
+    private int size;
+
     /**
      * The {@link java.util.Comparator} used to order the items in the heap.
      */
@@ -38,16 +50,19 @@ public class BinaryHeap<T> implements Heap<T> {
      * Constructs an empty heap.
      * @param c the comparator used to sort the heap items.
      */
+    @SuppressWarnings("unchecked")
     public BinaryHeap(Comparator<T> c) {
-        heap = new ArrayList<>();
+        heap = (T[])DEFAULT_HEAP;
+        size = 0;
         comparator = c;
     }
 
     /**
      * Raw constructs a heap.
      */
-    BinaryHeap(ArrayList<T> h, Comparator<T> c) {
+    BinaryHeap(T[] h, int s, Comparator<T> c) {
         heap = h;
+        size = s;
         comparator = c;
     }
 
@@ -64,13 +79,14 @@ public class BinaryHeap<T> implements Heap<T> {
      * @param c the comparator used to sort the heap items.
      * @param initial the items used to populate the heap.
      */
+    @SuppressWarnings("unchecked")
     public BinaryHeap(Comparator<T> c, Collection<? extends T> initial) {
-        this(c);
+        heap = (T[])initial.toArray();
+        size = heap.length;
+        comparator = c;
 
-        heap.addAll(initial);
-
-        if(heap.size() > 1) {
-            heapify(heap, comparator);
+        if(size > 1) {
+            heapify(heap, comparator, size);
         }
     }
 
@@ -90,7 +106,7 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public Optional<T> peek() {
-        return heap.isEmpty() ? Optional.empty() : Optional.of(heap.get(0));
+        return size == 0 ? Optional.empty() : Optional.of(heap[0]);
     }
 
     /**
@@ -100,16 +116,19 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public Optional<T> pop() {
-        if(heap.isEmpty()) {
+        if(size == 0) {
             return Optional.empty();
         }
 
-        int size = heap.size();
         if(size == 1) {
-            return Optional.of(heap.remove(0));
+            T top = heap[0];
+            heap[0] = null;
+            size = 0;
+            return Optional.of(top);
         }
 
-        return Optional.of(replaceTop(heap, comparator, heap.remove(size - 1)));
+        T bottom = heap[--size];
+        return Optional.of(replaceTop(heap, comparator, size, bottom));
     }
 
     /**
@@ -118,32 +137,35 @@ public class BinaryHeap<T> implements Heap<T> {
      * @return a list of all the top-most items requested.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public BinaryHeap<T> pop(int count) {
         if(count < 0) {
             throw new IllegalArgumentException();
         }
 
-        if(count == 0 || heap.isEmpty()) {
+        if(count == 0 || size == 0) {
             return new BinaryHeap<>(comparator);
         }
 
-        int size = heap.size();
-
         if(count >= size) {
-            ArrayList<T> head = new ArrayList<>(heap);
-            heap.clear();
-            return new BinaryHeap<>(head, comparator);
+            T[] head = heap;
+            int head_size = size;
+            heap = (T[])DEFAULT_HEAP;
+            size = 0;
+            return new BinaryHeap<>(head, head_size, comparator);
         }
 
         if(count == 1) {
-            ArrayList<T> head = new ArrayList<>();
-            head.add(replaceTop(heap, comparator, heap.remove(size - 1)));
-            return new BinaryHeap<>(head, comparator);
+            T bottom = heap[--size];
+            T top = replaceTop(heap, comparator, size, bottom);
+            T[] head = (T[])new Object[] { top };
+            return new BinaryHeap<>(head, 1, comparator);
         }
 
-        ArrayList<T> head = new ArrayList<>(count);
-        splitHeap(heap, comparator, head, count);
-        return new BinaryHeap<>(head, comparator);
+        T[] head = (T[])new Object[count];
+        splitHeap(heap, comparator, size, head, count);
+        size = size - count;
+        return new BinaryHeap<>(head, count, comparator);
     }
 
     /**
@@ -154,8 +176,8 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public Optional<T> update(Supplier<T> value) {
-        return heap.isEmpty() ? Optional.empty() :
-                Optional.of(replaceTop(heap, comparator, value.get()));
+        return size == 0 ? Optional.empty() :
+                Optional.of(replaceTop(heap, comparator, size, value.get()));
     }
 
     /**
@@ -164,9 +186,10 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public void add(T value) {
-        int index = heap.size();
-        heap.add(value);
-        siftUp(heap, comparator, index);
+        ensureExtraCapacity(1);
+        int index = size++;
+        heap[index] = value;
+        siftUp(heap, comparator, size, index);
     }
 
     /**
@@ -175,9 +198,13 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public void addAll(Collection<? extends T> values) {
-        int index = heap.size();
-        heap.addAll(values);
-        heapify(heap, comparator, index);
+        @SuppressWarnings("unchecked")
+        T[] v = (T[])values.toArray();
+        ensureExtraCapacity(v.length);
+        int index = size;
+        System.arraycopy(v, 0, heap, size, v.length);
+        size = size + v.length;
+        heapify(heap, comparator, size, index);
     }
 
     /**
@@ -186,30 +213,54 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     @Override
     public boolean isEmpty() {
-        return heap.isEmpty();
+        return size == 0;
     }
 
     /**
-     * Returns the number of items in the heap.
+     * Returns the number of items in the heap
      * @return the items count
      */
     @Override
     public int size() {
-        return heap.size();
+        return size;
     }
 
     /**
-     * Removes all the items from the heap.
+     * Removes all the items from the heap
      */
     @Override
     public void clear() {
-        heap.clear();
+        if(size > 0) {
+            Arrays.fill(heap, 0, size, null);
+            size = 0;
+        }
     }
 
     /**
      * Trims array storage to fit only current items.
      */
     public void trimToSize() {
-        heap.trimToSize();
+        if(size < heap.length) {
+            heap = Arrays.copyOf(heap, size);
+        }
+    }
+
+    private void ensureExtraCapacity(int excess) {
+        int newCapacity = size + excess;
+        if(newCapacity > heap.length) {
+            newCapacity = Math.min(MAX_CAPACITY, Math.max(INITIAL_CAPACITY,
+                            computeNewCapacity(newCapacity)));
+            heap = Arrays.copyOf(heap, newCapacity);
+        }
+    }
+
+    private static int computeNewCapacity(int capacity) {
+        int v = capacity;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        return capacity | v >> 2;
     }
 }
