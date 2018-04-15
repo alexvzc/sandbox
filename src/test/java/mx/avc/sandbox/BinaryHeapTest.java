@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -69,6 +70,10 @@ public class BinaryHeapTest {
                 T entry = h[i];
                 T root = h[(i - 1) / 2];
                 assertTrue(comparator.compare(root, entry) <= 0);
+            }
+
+            for(int i = size; i < h.length; i++) {
+                assertNull(h[i]);
             }
 
         } catch (NoSuchFieldException | IllegalAccessException ex) {
