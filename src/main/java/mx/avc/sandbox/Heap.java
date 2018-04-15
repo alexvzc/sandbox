@@ -79,6 +79,6 @@ public interface Heap<T> {
      */
     default public void addAll(Collection<? extends T> values) {
         Objects.requireNonNull(values);
-        values.forEach(v -> add(v));
+        values.forEach(this::add);
     }
 }

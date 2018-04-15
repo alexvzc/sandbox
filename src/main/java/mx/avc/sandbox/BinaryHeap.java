@@ -75,7 +75,7 @@ public class BinaryHeap<T> implements Heap<T> {
     }
 
     /**
-     * Constructs a prepopulated heap.
+     * Constructs a pre-populated heap.
      * @param c the comparator used to sort the heap items.
      * @param initial the items used to populate the heap.
      */
@@ -91,7 +91,7 @@ public class BinaryHeap<T> implements Heap<T> {
     }
 
     /**
-     * Constructs a prepopulated heap.
+     * Constructs a pre-populated heap.
      * @param initial the items used to populate the heap.
      */
     @SuppressWarnings("unchecked")
@@ -128,6 +128,7 @@ public class BinaryHeap<T> implements Heap<T> {
         }
 
         T bottom = heap[--size];
+        heap[size] = null;
         return Optional.of(replaceTop(heap, comparator, size, bottom));
     }
 
@@ -157,6 +158,7 @@ public class BinaryHeap<T> implements Heap<T> {
 
         if(count == 1) {
             T bottom = heap[--size];
+            heap[size] = null;
             T top = replaceTop(heap, comparator, size, bottom);
             T[] head = (T[])new Object[] { top };
             return new BinaryHeap<>(head, 1, comparator);
@@ -232,6 +234,7 @@ public class BinaryHeap<T> implements Heap<T> {
     public void clear() {
         if(size > 0) {
             Arrays.fill(heap, 0, size, null);
+            heap = (T[])DEFAULT_HEAP;
             size = 0;
         }
     }
@@ -241,7 +244,9 @@ public class BinaryHeap<T> implements Heap<T> {
      */
     public void trimToSize() {
         if(size < heap.length) {
+            T[] oldheap = heap;
             heap = Arrays.copyOf(heap, size);
+            Arrays.fill(oldheap, 0, size, null);
         }
     }
 
@@ -250,7 +255,9 @@ public class BinaryHeap<T> implements Heap<T> {
         if(newCapacity > heap.length) {
             newCapacity = Math.min(MAX_CAPACITY, Math.max(INITIAL_CAPACITY,
                             computeNewCapacity(newCapacity)));
+            T[] oldheap = heap;
             heap = Arrays.copyOf(heap, newCapacity);
+            Arrays.fill(oldheap, 0, size, null);
         }
     }
 
