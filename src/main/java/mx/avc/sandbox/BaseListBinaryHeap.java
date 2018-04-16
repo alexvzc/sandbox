@@ -58,24 +58,24 @@ public interface BaseListBinaryHeap {
 
     public static <T> void splitHeap(List<T> tail,
             Comparator<? super T> comparator, List<T> head, int count) {
-        Comparator<? super T> reversed = comparator.reversed();
+        final int head_top = count - 1;
 
         head.clear();
         List<T> head_range = tail.subList(0, count);
         head.addAll(head_range);
         head_range.clear();
 
-        heapify(head, reversed);
+        reverseHeapify(head, comparator);
         heapify(tail, comparator);
 
-        T max_head = head.get(0);
+        T max_head = head.get(head_top);
         T min_tail = tail.get(0);
         while(comparator.compare(min_tail, max_head) < 0) {
-            head.set(0, min_tail);
-            siftDown(head, reversed, 0);
+            head.set(head_top, min_tail);
+            reverseSiftDown(head, comparator, head_top);
             tail.set(0, max_head);
             siftDown(tail, comparator, 0);
-            max_head = head.get(0);
+            max_head = head.get(head_top);
             min_tail = tail.get(0);
         }
 
@@ -140,6 +140,55 @@ public interface BaseListBinaryHeap {
                 left = index * 2 + 1;
 
             } while(left < limit);
+        }
+    }
+
+    public static <T> void reverseHeapify(List<T> heap,
+            Comparator<? super T> comparator) {
+        final int limit = heap.size();
+        for(int index = (limit + 1) / 2; index < limit; index++) {
+            reverseSiftDown(heap, comparator, index);
+        }
+    }
+
+    public static <T> void reverseSiftDown(List<T> heap,
+            Comparator<? super T> comparator, int index) {
+        int limit = heap.size();
+        int left = index * 2 - limit;
+
+        if(left >= 0) {
+            T item = heap.get(index);
+            int smallest_index = index;
+
+            do {
+                T smallest_item = item;
+
+                T left_item = heap.get(left);
+                if(comparator.compare(left_item, smallest_item) > 0) {
+                    smallest_index = left;
+                    smallest_item = left_item;
+                }
+
+                int right = left - 1;
+                if(right >= 0) {
+                    T right_item = heap.get(right);
+                    if(comparator.compare(right_item, smallest_item) > 0) {
+                        smallest_index = right;
+                        smallest_item = right_item;
+                    }
+                }
+
+                if(smallest_index == index) {
+                    break;
+                }
+
+                heap.set(index, smallest_item);
+                heap.set(smallest_index, item);
+
+                index = smallest_index;
+                left = index * 2 - limit;
+
+            } while(left >= 0);
         }
     }
 }

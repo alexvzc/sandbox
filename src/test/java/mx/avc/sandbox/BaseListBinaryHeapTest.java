@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import static mx.avc.sandbox.BaseListBinaryHeap.heapify;
 import static mx.avc.sandbox.BaseListBinaryHeap.replaceTop;
+import static mx.avc.sandbox.BaseListBinaryHeap.reverseHeapify;
 import static mx.avc.sandbox.BaseListBinaryHeap.splitHeap;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -43,6 +44,15 @@ public class BaseListBinaryHeapTest {
         for(int i = 1; i < limit; i++) {
             assertTrue(comparator.compare(
                     heap.get((i - 1) / 2), heap.get(i)) <= 0);
+        }
+    }
+
+    public static <T> void assertReverseHeapConsistency(List<T> heap,
+            Comparator<? super T> comparator) {
+        int limit = heap.size();
+        for(int i = limit - 2; i >= 0; i--) {
+            assertTrue(comparator.compare(heap.get((limit + i + 1) / 2),
+                    heap.get(i)) >= 0);
         }
     }
 
@@ -98,6 +108,25 @@ public class BaseListBinaryHeapTest {
             }
         }
     }
+
+    @Test
+    public void testReverseHeapify() {
+        LOGGER.info("Testing reverseHeapify()");
+
+        Comparator<Integer> natural_order = naturalOrder();
+        final int max_length = TEST_VALUES.size();
+        List<Integer> test_values = new ArrayList<>(max_length);
+
+        final int max_base = max_length - 1;
+        for(int base = 0; base < max_base; base++) {
+            for(int limit = base + 1; limit <= max_length; limit++) {
+                test_values.clear();
+                test_values.addAll(TEST_VALUES.subList(base, limit));
+                reverseHeapify(test_values, natural_order);
+                assertReverseHeapConsistency(test_values, natural_order);
+            }
+        }
+   }
 
     @Test
     public void testSplitHeap() {
