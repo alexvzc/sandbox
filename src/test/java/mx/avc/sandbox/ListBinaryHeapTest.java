@@ -8,7 +8,6 @@
  */
 package mx.avc.sandbox;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import java.util.Collections;
@@ -17,10 +16,10 @@ import static java.util.Comparator.naturalOrder;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import static mx.avc.sandbox.TestUtils.getFieldValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.slf4j.Logger;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -49,28 +48,14 @@ public class ListBinaryHeapTest {
 
     private static <T> void assertHeapConsistency(ListBinaryHeap<T> heap) {
 
-        try {
-            Field privateHeap = ListBinaryHeap.class.getDeclaredField("heap");
-            privateHeap.setAccessible(true);
-            Field privateComparator =
-                    ListBinaryHeap.class.getDeclaredField("comparator");
-            privateComparator.setAccessible(true);
+        List<T> h = getFieldValue(heap, "heap");
+        Comparator<T> comparator = getFieldValue(heap, "comparator");
 
-            @SuppressWarnings("unchecked")
-            List<T> h = (List<T>)privateHeap.get(heap);
-            @SuppressWarnings("unchecked")
-            Comparator<T> comparator =
-                    (Comparator<T>)privateComparator.get(heap);
-
-            int size = h.size();
-            for(int i = 1; i < size; i++) {
-                T entry = h.get(i);
-                T root = h.get((i - 1) / 2);
-                assertTrue(comparator.compare(root, entry) <= 0);
-            }
-
-        } catch (NoSuchFieldException | IllegalAccessException ex) {
-            fail();
+        int size = h.size();
+        for(int i = 1; i < size; i++) {
+            T entry = h.get(i);
+            T root = h.get((i - 1) / 2);
+            assertTrue(comparator.compare(root, entry) <= 0);
         }
     }
 
