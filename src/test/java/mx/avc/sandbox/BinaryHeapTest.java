@@ -8,7 +8,6 @@
  */
 package mx.avc.sandbox;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import java.util.Collections;
@@ -17,11 +16,11 @@ import static java.util.Comparator.naturalOrder;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import static mx.avc.sandbox.TestUtils.getFieldValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.slf4j.Logger;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -50,34 +49,18 @@ public class BinaryHeapTest {
 
     private static <T> void assertHeapConsistency(BinaryHeap<T> heap) {
 
-        try {
-            Field privateHeap = BinaryHeap.class.getDeclaredField("heap");
-            privateHeap.setAccessible(true);
-            Field privateSize = BinaryHeap.class.getDeclaredField("size");
-            privateSize.setAccessible(true);
-            Field privateComparator =
-                    BinaryHeap.class.getDeclaredField("comparator");
-            privateComparator.setAccessible(true);
+        T[] h = getFieldValue(heap, "heap");
+        Comparator<T> comparator = getFieldValue(heap, "comparator");
 
-            @SuppressWarnings("unchecked")
-            T[] h = (T[])privateHeap.get(heap);
-            @SuppressWarnings("unchecked")
-            Comparator<T> comparator =
-                    (Comparator<T>)privateComparator.get(heap);
+        int size = getFieldValue(heap, "size");
+        for(int i = 1; i < size; i++) {
+            T entry = h[i];
+            T root = h[(i - 1) / 2];
+            assertTrue(comparator.compare(root, entry) <= 0);
+        }
 
-            int size = privateSize.getInt(heap);
-            for(int i = 1; i < size; i++) {
-                T entry = h[i];
-                T root = h[(i - 1) / 2];
-                assertTrue(comparator.compare(root, entry) <= 0);
-            }
-
-            for(int i = size; i < h.length; i++) {
-                assertNull(h[i]);
-            }
-
-        } catch (NoSuchFieldException | IllegalAccessException ex) {
-            fail();
+        for(int i = size; i < h.length; i++) {
+            assertNull(h[i]);
         }
     }
 
